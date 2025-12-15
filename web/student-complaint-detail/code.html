@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Complaint Details - SIMPEL-K Student</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "primary-dark": "#0f66bd",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a2632",
+                        "border-light": "#e7edf3",
+                        "border-dark": "#2a3b4d",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"],
+                        "body": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Lexend', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#0d141b] dark:text-[#e0e0e0] flex flex-col min-h-screen">
+    <!-- Navigation -->
+    <header class="sticky top-0 z-50 bg-surface-light dark:bg-surface-dark border-b border-border-light dark:border-border-dark px-4 md:px-10 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 text-primary dark:text-white">
+                <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                    <span class="material-symbols-outlined">school</span>
+                </div>
+                <h2 class="text-[#0d141b] dark:text-white text-xl font-bold tracking-tight">SIMPEL-K</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <button class="hidden md:flex items-center justify-center size-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+                <div class="flex items-center gap-3 pl-4 border-l border-border-light dark:border-border-dark">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-semibold text-[#0d141b] dark:text-white" id="userName">Student</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400" id="studentId">Student ID</p>
+                    </div>
+                    <div class="size-10 rounded-full bg-cover bg-center border-2 border-white dark:border-slate-700 shadow-sm bg-primary/20 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary">person</span>
+                    </div>
+                    <button class="hidden md:flex items-center justify-center size-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300" title="Logout" onclick="if(typeof AuthAPI !== 'undefined') { AuthAPI.logout(); } return false;">
+                        <span class="material-symbols-outlined">logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-10 py-8 space-y-8">
+        <!-- Breadcrumbs -->
+        <nav class="flex flex-wrap items-center gap-2 text-sm">
+            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="/student/dashboard">Dashboard</a>
+            <span class="text-slate-400 dark:text-slate-600">/</span>
+            <a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="/student/dashboard">My Complaints</a>
+            <span class="text-slate-400 dark:text-slate-600">/</span>
+            <span class="text-slate-900 dark:text-white font-medium" id="breadcrumbTicketId">Complaint Details</span>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+                <h1 class="text-[#0d141b] dark:text-white text-3xl md:text-4xl font-black tracking-tight mb-2" id="complaintTitle">Complaint Details</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-base">View your complaint details and track its progress.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold" id="statusBadge">
+                    <span class="size-2 rounded-full"></span>
+                    <span id="statusText">Loading...</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column: Complaint Information (Span 2) -->
+            <div class="lg:col-span-2 flex flex-col gap-6">
+                <!-- Main Details Card -->
+                <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+                    <div class="p-6 border-b border-border-light dark:border-border-dark flex justify-between items-start">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs font-bold tracking-wider text-primary uppercase" id="categoryName">Category</span>
+                            <h2 class="text-xl md:text-2xl font-bold text-[#0d141b] dark:text-white leading-tight" id="complaintTitleDetail">Loading...</h2>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm">
+                                <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                                <span id="complaintDate">-</span>
+                            </div>
+                            <div class="text-xs text-slate-400 dark:text-slate-500 mt-1" id="complaintTime">-</div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-[#0d141b] dark:text-white">Description</h3>
+                            <p class="text-slate-600 dark:text-slate-300 leading-relaxed" id="complaintDescription">
+                                Loading...
+                            </p>
+                        </div>
+                        <div class="mt-8 space-y-4" id="evidenceSection" style="display: none;">
+                            <h3 class="text-lg font-semibold text-[#0d141b] dark:text-white">Attached Evidence</h3>
+                            <div class="rounded-lg overflow-hidden border border-border-light dark:border-border-dark bg-slate-100 dark:bg-slate-900 relative group cursor-pointer max-w-md">
+                                <img id="evidenceImage" src="" alt="Evidence" class="w-full h-auto object-cover" style="display: none;">
+                                <div class="aspect-video bg-cover bg-center transition-transform duration-500 group-hover:scale-105" id="evidenceBackground" style="display: none;"></div>
+                                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                    <a id="viewFullSizeBtn" href="#" target="_blank" class="bg-white/90 text-slate-900 px-4 py-2 rounded-lg text-sm font-medium shadow-sm opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                        View Full Size
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Response Card (if available) -->
+                <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden" id="adminResponseCard" style="display: none;">
+                    <div class="p-6 border-b border-border-light dark:border-border-dark bg-primary/5 dark:bg-primary/10">
+                        <h3 class="font-bold text-[#0d141b] dark:text-white flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+                            Admin Response
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap" id="adminResponseText">
+                            No response yet.
+                        </p>
+                        <div class="mt-4 text-xs text-slate-500 dark:text-slate-400" id="responseDate">
+                            <!-- Response date will be shown here if available -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Quick Info (Span 1) -->
+            <div class="lg:col-span-1 flex flex-col gap-6">
+                <!-- Ticket Info Card -->
+                <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-5 sticky top-4">
+                    <h4 class="text-sm font-bold text-[#0d141b] dark:text-white mb-4 uppercase tracking-wider">Ticket Information</h4>
+                    <div class="flex flex-col gap-4 text-sm">
+                        <div>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold block mb-1">Ticket ID</span>
+                            <span class="text-base font-bold text-[#0d141b] dark:text-white" id="ticketId">-</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold block mb-1">Status</span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold" id="ticketStatusBadge">
+                                <span class="size-1.5 rounded-full"></span>
+                                <span id="ticketStatusText">-</span>
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold block mb-1">Submitted</span>
+                            <span class="text-base text-[#0d141b] dark:text-white" id="submittedDate">-</span>
+                        </div>
+                        <div>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold block mb-1">Last Updated</span>
+                            <span class="text-base text-[#0d141b] dark:text-white" id="updatedDate">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Card -->
+                <div class="bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-5">
+                    <h4 class="text-sm font-bold text-[#0d141b] dark:text-white mb-4 uppercase tracking-wider">Actions</h4>
+                    <div class="flex flex-col gap-3">
+                        <a href="/student/dashboard" class="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#0d141b] dark:text-white font-medium py-2.5 px-4 rounded-lg transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                            Back to Dashboard
+                        </a>
+                        <a href="/complaint/submit" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white font-medium py-2.5 px-4 rounded-lg transition-colors shadow-sm">
+                            <span class="material-symbols-outlined text-[20px]">add_circle</span>
+                            Submit New Complaint
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/student-complaint-details.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Complaint Details - SIMPEL-K Admin</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- SideNavBar -->
+<aside class="w-64 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-card-light dark:bg-card-dark flex flex-col transition-all duration-300">
+<div class="p-6 flex items-center gap-3">
+<div class="flex items-center justify-center size-10 rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined">school</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-none">SIMPEL-K</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Admin Portal</p>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto px-4 py-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" href="/admin/dashboard">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-primary text-white group" href="/admin/complaints">
+<span class="material-symbols-outlined">inbox</span>
+<span class="font-medium">Complaints</span>
+<span class="ml-auto bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 py-0.5 px-2 rounded-full text-xs font-bold pointer-events-none" id="pendingCount">0</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" href="/admin/users">
+<span class="material-symbols-outlined">group</span>
+<span class="font-medium">Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" href="/admin/reports">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="font-medium">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group" href="/admin/settings">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-900/10 hover:text-red-600 dark:hover:text-red-400 transition-colors" href="#" onclick="if(typeof AuthAPI !== 'undefined') { AuthAPI.logout(); } return false;">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-medium">Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- TopNavBar -->
+<header class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-slate-800 bg-card-light dark:bg-card-dark shrink-0">
+<div class="flex items-center gap-4">
+<button class="lg:hidden p-2 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<!-- Search Bar -->
+<div class="relative hidden md:flex items-center w-80">
+<span class="absolute left-3 text-slate-400 material-symbols-outlined" style="font-size: 20px;">search</span>
+<input class="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border-none text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary placeholder:text-slate-400" placeholder="Search complaints, students..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-card-dark"></span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-semibold text-slate-900 dark:text-white">Admin User</p>
+<p class="text-xs text-slate-500 dark:text-slate-400">Super Admin</p>
+</div>
+<div class="size-9 rounded-full bg-cover bg-center border border-slate-200 dark:border-slate-700" data-alt="Admin user profile picture showing a smiling man" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAcpBySpweN0wxj3zarHsqjvRP3tf9kz9yiOrJ3LtXP8Ixa0usvjqQDv7bJCBIfY8b1NKtTzxHXtZESFmFoAXlkJmKLxwuwq5bo04VdC0GZhOq1V3VXBA-UOOhZXFqVLMlK_4yOFiBqiKZfLBV6jVIKX1dPZXc8Q46rSdIJjTEFDC40O-2u6tCC66eo4DL88sU-_lc-cDw-wObYWzGOJTOK37k-SOtEdELtNXikOuPcknmc8qnudkwOU8pAsct2T6QmwyvPsM92G1U");'>
+</div>
+</div>
+</div>
+</header>
+<!-- Scrollable Page Content -->
+<div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+<div class="max-w-6xl mx-auto flex flex-col gap-6">
+<!-- Breadcrumbs -->
+<nav class="flex flex-wrap items-center gap-2 text-sm">
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">Dashboard</a>
+<span class="text-slate-400 dark:text-slate-600">/</span>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="/admin/complaints">Complaints</a>
+<span class="text-slate-400 dark:text-slate-600">/</span>
+<span class="text-slate-900 dark:text-white font-medium">Complaint #2023-0058</span>
+</nav>
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+<div>
+<h1 class="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-2">Complaint Detail #2023-0058</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm">Review student report details and update resolution status.</p>
+</div>
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+<span class="material-symbols-outlined text-[18px]">pending</span>
+                                Pending Review
+                            </span>
+</div>
+</div>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Left Column: Complaint Information (Span 2) -->
+<div class="lg:col-span-2 flex flex-col gap-6">
+<!-- Main Details Card -->
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-start">
+<div class="flex flex-col gap-1">
+<span class="text-xs font-bold tracking-wider text-primary uppercase">Infrastructure</span>
+<h2 class="text-xl md:text-2xl font-bold text-slate-900 dark:text-white leading-tight">Broken Air Conditioner in Lab 3</h2>
+</div>
+<div class="text-right shrink-0">
+<div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>Oct 24, 2023</span>
+</div>
+<div class="text-xs text-slate-400 dark:text-slate-500 mt-1">10:42 AM</div>
+</div>
+</div>
+<div class="p-6">
+<div class="flex items-center gap-4 mb-8 bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
+<div class="size-12 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-slate-500 dark:text-slate-300">
+<span class="material-symbols-outlined text-2xl">person</span>
+</div>
+<div class="flex flex-col">
+<span class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold">Reported By</span>
+<span class="text-base font-bold text-slate-900 dark:text-white">John Doe</span>
+<span class="text-sm text-slate-500 dark:text-slate-400">NIM: 12345678 • Computer Science Dept</span>
+</div>
+</div>
+<div class="space-y-4">
+<h3 class="text-lg font-semibold text-slate-900 dark:text-white">Description</h3>
+<p class="text-slate-600 dark:text-slate-300 leading-relaxed">
+                                            The AC unit in Computer Lab 3 (East Wing) has been leaking water since Monday morning. It is creating a puddle near the server rack which is a safety hazard. The cooling is also not working effectively, making the lab very hot during classes. Please send a technician to check it as soon as possible.
+                                        </p>
+</div>
+<div class="mt-8 space-y-4">
+<h3 class="text-lg font-semibold text-slate-900 dark:text-white">Attached Evidence</h3>
+<div class="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 relative group cursor-pointer max-w-md">
+<div class="aspect-video bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Photo of a leaking air conditioning unit on a white wall" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDCGRok3LC7rzXbJewlTvFvZzMiUKtaO6n4cEj4r5-j0ply6pR9to5A4oZH8e9USLHRiKxY6qAW4GwJ9EOLdQuWtoN5mxQIjrt2CaMuNh3z0-HMWsM6dl7zqISsAmFYrXG-_XNSSBlcVJouAaI8_s7V2BQMog1s2ZeFL6_Q-itYWJjxd_fu6h1e2mFbr01JjlddUpGpEcjymnKq09X8pAaQEB0rFP2h06Vb6c-GgutepaMQWUOsLMR6RApE9cLP9eSFmaqU45rM3Uc");'></div>
+<div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+<button class="bg-white/90 text-slate-900 px-4 py-2 rounded-lg text-sm font-medium shadow-sm opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                                    View Full Size
+                                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Admin Actions (Span 1) -->
+<div class="lg:col-span-1 flex flex-col gap-6">
+<!-- Action Panel -->
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 sticky top-4">
+<div class="p-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
+<h3 class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+                                        Admin Actions
+                                    </h3>
+</div>
+<form class="p-5 flex flex-col gap-5">
+<!-- Status Update -->
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300" for="status">Update Status</label>
+<div class="relative">
+<select class="w-full pl-3 pr-10 py-2.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-slate-900 dark:text-white appearance-none cursor-pointer" id="status">
+<option value="pending">Pending Review</option>
+<option value="in_process">In Process</option>
+<option value="completed">Completed</option>
+<option value="rejected">Rejected</option>
+</select>
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500">
+<span class="material-symbols-outlined text-[20px]">expand_more</span>
+</div>
+</div>
+<p class="text-xs text-slate-500 dark:text-slate-400">Current status: <span class="font-medium text-amber-600 dark:text-amber-400">Pending</span></p>
+</div>
+<!-- Response -->
+<div class="space-y-2">
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300" for="response">Official Response</label>
+<textarea class="w-full p-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-sm text-slate-900 dark:text-white placeholder:text-slate-400 resize-none" id="response" placeholder="Type your response to the student here... e.g. 'We have dispatched a technician.'" rows="6"></textarea>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-3 pt-2">
+<button class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg transition-colors shadow-sm shadow-blue-200 dark:shadow-none" type="submit">
+<span class="material-symbols-outlined text-[20px]">save</span>
+                                            Update Complaint
+                                        </button>
+<button class="w-full text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium py-2.5 px-4 rounded-lg transition-colors text-sm" type="button">
+                                            Cancel
+                                        </button>
+</div>
+</form>
+</div>
+<!-- Quick Info / Metadata -->
+<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
+<h4 class="text-sm font-bold text-slate-900 dark:text-white mb-4 uppercase tracking-wider">Contact Student</h4>
+<div class="flex flex-col gap-3 text-sm">
+<div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[20px] text-slate-400">mail</span>
+<a class="hover:text-primary transition-colors" href="mailto:john.doe@university.edu">john.doe@university.edu</a>
+</div>
+<div class="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[20px] text-slate-400">call</span>
+<a class="hover:text-primary transition-colors" href="tel:+6281234567890">+62 812-3456-7890</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/complaint-details.js"></script>
+</body></html>
