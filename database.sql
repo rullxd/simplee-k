@@ -73,18 +73,3 @@ INSERT INTO categories (name, slug) VALUES
 ('Other', 'other')
 ON DUPLICATE KEY UPDATE name=name;
 
--- 6. Insert Default Admin User
--- Password: admin123 (bcrypt hash)
--- Catatan: Jika hash ini tidak bekerja, jalankan aplikasi Go sekali untuk auto-seed
--- atau generate hash baru dengan: go run -c "package main; import (\"fmt\"; \"golang.org/x/crypto/bcrypt\"); func main() { h, _ := bcrypt.GenerateFromPassword([]byte(\"admin123\"), 10); fmt.Print(string(h)) }"
-INSERT INTO users (username, student_id, email, password, name, role) VALUES
-('admin', 'ADMIN001', 'admin@simplee-k.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin User', 'admin')
-ON DUPLICATE KEY UPDATE username=username;
-
--- ============================================
--- SELESAI!
--- ============================================
--- Default Login:
--- Username: admin
--- Password: admin123
--- ============================================
