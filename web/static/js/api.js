@@ -9,8 +9,9 @@ const API_BASE_URL = (() => {
     if (typeof window !== 'undefined' && window.API_BASE_URL) {
         return window.API_BASE_URL;
     }
-    // Fallback to localhost for local development
-    return 'http://localhost:8080/api';
+    // Ngrok URL - Update this if ngrok URL changes
+    // Current ngrok URL: https://e04de0acf391.ngrok-free.app
+    return 'https://e04de0acf391.ngrok-free.app/api';
 })();
 
 // Token management
