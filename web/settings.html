@@ -181,21 +181,13 @@
                     <button id="mobileMenuBtn" class="lg:hidden p-2 text-slate-600 dark:text-slate-300" onclick="toggleSidebar()">
                         <span class="material-symbols-outlined">menu</span>
                     </button>
-                    <!-- Search Bar -->
-                    <div class="relative hidden md:flex items-center w-80">
-                        <span class="absolute left-3 text-slate-400 material-symbols-outlined"
-                            style="font-size: 20px;">search</span>
-                        <input
-                            class="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 border-none text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary placeholder:text-slate-400"
-                            placeholder="Search complaints, students..." type="text" />
-                    </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <button
+                    <button id="notificationBtn"
                         class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
                         <span class="material-symbols-outlined">notifications</span>
-                        <span
-                            class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-card-dark"></span>
+                        <span id="notificationBadge"
+                            class="absolute top-2 right-2 size-2.5 bg-red-500 rounded-full border-2 border-white dark:border-card-dark hidden"></span>
                     </button>
                     <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
                         <div class="text-right hidden sm:block">
@@ -440,8 +432,27 @@
     </div>
     <!-- Sidebar Overlay for Mobile -->
     <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/50 z-30 lg:hidden" onclick="toggleSidebar()"></div>
+    <!-- Notification Popup -->
+    <div id="notificationPopup" class="hidden fixed top-16 right-6 z-50 w-96 max-w-[calc(100vw-2rem)] bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-[600px] flex flex-col">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Notifications</h3>
+            <div class="flex items-center gap-2">
+                <button id="markAllReadBtn" class="text-xs text-primary hover:text-blue-600 font-medium">Mark all as read</button>
+                <button id="closeNotificationBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">close</span>
+                </button>
+            </div>
+        </div>
+        <div id="notificationList" class="flex-1 overflow-y-auto p-2">
+            <div class="text-center text-slate-500 dark:text-slate-400 py-8">Loading notifications...</div>
+        </div>
+        <div class="p-3 border-t border-slate-200 dark:border-slate-800 text-center">
+            <a href="#" class="text-sm text-primary hover:text-blue-600 font-medium">View All Notifications</a>
+        </div>
+    </div>
     <script src="/static/js/api.js"></script>
     <script src="/static/js/settings.js"></script>
+    <script src="/static/js/admin-notifications.js"></script>
     <script>
         // Initialize theme
         if (typeof ThemeManager !== 'undefined') {

@@ -1,5 +1,17 @@
 // API Configuration
-const API_BASE_URL = 'http://localhost:8080/api';
+// For Vercel: Set window.API_BASE_URL via script tag in HTML or use environment variable
+// For local development: Uses localhost as fallback
+// 
+// To set API URL dynamically, add this before loading api.js:
+// <script>window.API_BASE_URL = 'https://your-backend-url.com/api';</script>
+const API_BASE_URL = (() => {
+    // Check if set via window (for runtime config - recommended)
+    if (typeof window !== 'undefined' && window.API_BASE_URL) {
+        return window.API_BASE_URL;
+    }
+    // Fallback to localhost for local development
+    return 'http://localhost:8080/api';
+})();
 
 // Token management
 const TokenManager = {
@@ -37,7 +49,7 @@ async function apiRequest(endpoint, options = {}) {
     }
 
     const data = await response.json();
-    
+
     if (!response.ok) {
         throw new Error(data.error || 'Request failed');
     }
@@ -52,12 +64,12 @@ const AuthAPI = {
             method: 'POST',
             body: JSON.stringify({ username, password }),
         });
-        
+
         if (response) {
             TokenManager.setToken(response.token);
             TokenManager.setUser(response.user);
         }
-        
+
         return response;
     },
     logout: () => {
@@ -151,29 +163,29 @@ const AnnouncementAPI = {
         if (params.limit) queryParams.append('limit', params.limit);
         if (params.status) queryParams.append('status', params.status);
         if (params.search) queryParams.append('search', params.search);
-        
+
         const query = queryParams.toString();
         return await apiRequest(`/announcements${query ? '?' + query : ''}`);
     },
-    
+
     getById: async (id) => {
         return await apiRequest(`/announcements/${id}`);
     },
-    
+
     create: async (data) => {
         return await apiRequest('/announcements', {
             method: 'POST',
             body: JSON.stringify(data),
         });
     },
-    
+
     update: async (id, data) => {
         return await apiRequest(`/announcements/${id}`, {
             method: 'PUT',
             body: JSON.stringify(data),
         });
     },
-    
+
     delete: async (id) => {
         return await apiRequest(`/announcements/${id}`, {
             method: 'DELETE',
@@ -204,10 +216,10 @@ const NotificationAPI = {
 // Utility functions
 function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
     });
 }
 
@@ -241,7 +253,7 @@ const ThemeManager = {
         // Default to light mode
         return 'light';
     },
-    
+
     setTheme: (theme) => {
         localStorage.setItem('theme', theme);
         const html = document.documentElement;
@@ -253,14 +265,14 @@ const ThemeManager = {
             html.classList.add('light');
         }
     },
-    
+
     toggle: () => {
         const currentTheme = ThemeManager.getTheme();
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
         ThemeManager.setTheme(newTheme);
         return newTheme;
     },
-    
+
     init: () => {
         const theme = ThemeManager.getTheme();
         ThemeManager.setTheme(theme);

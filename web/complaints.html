@@ -127,9 +127,9 @@
 </div>
 </div>
 <div class="flex items-center gap-4">
-<button class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
+<button id="notificationBtn" class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors">
 <span class="material-symbols-outlined">notifications</span>
-<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-card-dark"></span>
+<span id="notificationBadge" class="absolute top-2 right-2 size-2.5 bg-red-500 rounded-full border-2 border-white dark:border-card-dark hidden"></span>
 </button>
 <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
 <div class="text-right hidden sm:block">
@@ -254,6 +254,24 @@ Export
 </div>
 <!-- Sidebar Overlay for Mobile -->
 <div id="sidebarOverlay" class="hidden fixed inset-0 bg-black/50 z-30 lg:hidden" onclick="toggleSidebar()"></div>
+<!-- Notification Popup -->
+<div id="notificationPopup" class="hidden fixed top-16 right-6 z-50 w-96 max-w-[calc(100vw-2rem)] bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-[600px] flex flex-col">
+<div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Notifications</h3>
+<div class="flex items-center gap-2">
+<button id="markAllReadBtn" class="text-xs text-primary hover:text-blue-600 font-medium">Mark all as read</button>
+<button id="closeNotificationBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+<span class="material-symbols-outlined" style="font-size: 20px;">close</span>
+</button>
+</div>
+</div>
+<div id="notificationList" class="flex-1 overflow-y-auto p-2">
+<div class="text-center text-slate-500 dark:text-slate-400 py-8">Loading notifications...</div>
+</div>
+<div class="p-3 border-t border-slate-200 dark:border-slate-800 text-center">
+<a href="#" class="text-sm text-primary hover:text-blue-600 font-medium">View All Notifications</a>
+</div>
+</div>
 <script src="/static/js/api.js"></script>
 <script src="/static/js/complaints.js"></script>
 <script>
@@ -288,6 +306,165 @@ Export
                 updateThemeToggle();
             });
         }
+    }
+    
+    // Notification functions
+    async function loadNotifications() {
+        try {
+            const response = await NotificationAPI.getAll({ limit: 20 });
+            if (response && response.data) {
+                displayNotifications(response.data);
+                updateNotificationBadge(response.unread_count || 0);
+            }
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+        }
+    }
+
+    function displayNotifications(notifications) {
+        const notificationList = document.getElementById('notificationList');
+        if (!notificationList) return;
+
+        if (notifications.length === 0) {
+            notificationList.innerHTML = '<div class="text-center text-slate-500 dark:text-slate-400 py-8">No notifications</div>';
+            return;
+        }
+
+        notificationList.innerHTML = notifications.map(notif => `
+            <div class="p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer ${!notif.is_read ? 'bg-blue-50 dark:bg-blue-900/10' : ''}" onclick="handleNotificationClick(${notif.id}, ${notif.related_id || 'null'}, '${notif.type}')">
+                <div class="flex items-start gap-3">
+                    <div class="size-10 rounded-full ${getNotificationIconColor(notif.type)} flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-white" style="font-size: 20px;">${getNotificationIcon(notif.type)}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start justify-between gap-2">
+                            <h4 class="text-sm font-semibold text-slate-900 dark:text-white ${!notif.is_read ? 'font-bold' : ''}">${notif.title}</h4>
+                            ${!notif.is_read ? '<span class="size-2 rounded-full bg-primary flex-shrink-0 mt-1"></span>' : ''}
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">${notif.message}</p>
+                        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">${formatNotificationTime(notif.created_at)}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function getNotificationIcon(type) {
+        const icons = {
+            'complaint_update': 'inbox',
+            'announcement': 'campaign',
+            'system': 'inbox',
+            'other': 'notifications',
+        };
+        return icons[type] || 'notifications';
+    }
+
+    function getNotificationIconColor(type) {
+        const colors = {
+            'complaint_update': 'bg-blue-500',
+            'announcement': 'bg-purple-500',
+            'system': 'bg-green-500',
+            'other': 'bg-slate-500',
+        };
+        return colors[type] || 'bg-slate-500';
+    }
+
+    function formatNotificationTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+    }
+
+    function updateNotificationBadge(count) {
+        const badge = document.getElementById('notificationBadge');
+        if (badge) {
+            if (count > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    }
+
+    async function handleNotificationClick(notificationId, relatedId, type) {
+        try {
+            await NotificationAPI.markAsRead(notificationId);
+            await loadNotifications();
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+
+        if ((type === 'complaint_update' || type === 'system') && relatedId) {
+            window.location.href = `/admin/complaint/${relatedId}`;
+        } else if (type === 'announcement' && relatedId) {
+            try {
+                const announcement = await AnnouncementAPI.getById(relatedId);
+                if (announcement) {
+                    const popup = document.getElementById('notificationPopup');
+                    if (popup) popup.classList.add('hidden');
+                    alert(`Announcement: ${announcement.title}\n\n${announcement.content}`);
+                }
+            } catch (error) {
+                console.error('Error loading announcement:', error);
+            }
+        }
+    }
+
+    // Setup notification event listeners
+    function setupNotificationListeners() {
+        const notificationBtn = document.getElementById('notificationBtn');
+        const notificationPopup = document.getElementById('notificationPopup');
+        const closeNotificationBtn = document.getElementById('closeNotificationBtn');
+        const markAllReadBtn = document.getElementById('markAllReadBtn');
+
+        if (notificationBtn && notificationPopup) {
+            notificationBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                notificationPopup.classList.toggle('hidden');
+                if (!notificationPopup.classList.contains('hidden')) {
+                    loadNotifications();
+                }
+            });
+        }
+
+        if (closeNotificationBtn && notificationPopup) {
+            closeNotificationBtn.addEventListener('click', () => {
+                notificationPopup.classList.add('hidden');
+            });
+        }
+
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', async () => {
+                try {
+                    await NotificationAPI.markAllAsRead();
+                    await loadNotifications();
+                } catch (error) {
+                    console.error('Error marking all as read:', error);
+                }
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (notificationPopup && !notificationPopup.contains(e.target) && notificationBtn && !notificationBtn.contains(e.target)) {
+                notificationPopup.classList.add('hidden');
+            }
+        });
+    }
+
+    // Load notifications on page load
+    if (typeof NotificationAPI !== 'undefined') {
+        loadNotifications();
+        setupNotificationListeners();
     }
     
     // Mobile sidebar toggle
