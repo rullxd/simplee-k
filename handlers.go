@@ -530,28 +530,39 @@ func getReportStats(c *gin.Context) {
 	startDate := c.Query("start_date")
 	endDate := c.Query("end_date")
 	
-	query := DB.Model(&models.Complaint{})
-	
-	// Apply date filter if provided
-	if startDate != "" && endDate != "" {
-		query = query.Where("created_at BETWEEN ? AND ?", startDate, endDate)
-	}
-	
 	var total, pending, resolved int64
 	var avgResolutionHours float64
 	
-	// Count total
-	query.Count(&total)
+	// Base query for date filtering
+	baseQuery := DB.Model(&models.Complaint{})
+	if startDate != "" && endDate != "" {
+		baseQuery = baseQuery.Where("created_at BETWEEN ? AND ?", startDate, endDate)
+	}
 	
-	// Count pending
-	query.Where("status = ?", models.StatusPending).Count(&pending)
+	// Count total (all complaints in date range)
+	baseQuery.Count(&total)
 	
-	// Count resolved (completed)
-	query.Where("status = ?", models.StatusCompleted).Count(&resolved)
+	// Count pending (separate query)
+	pendingQuery := DB.Model(&models.Complaint{}).Where("status = ?", models.StatusPending)
+	if startDate != "" && endDate != "" {
+		pendingQuery = pendingQuery.Where("created_at BETWEEN ? AND ?", startDate, endDate)
+	}
+	pendingQuery.Count(&pending)
 	
-	// Calculate average resolution time (in days)
+	// Count resolved (completed) - separate query
+	resolvedQuery := DB.Model(&models.Complaint{}).Where("status = ?", models.StatusCompleted)
+	if startDate != "" && endDate != "" {
+		resolvedQuery = resolvedQuery.Where("created_at BETWEEN ? AND ?", startDate, endDate)
+	}
+	resolvedQuery.Count(&resolved)
+	
+	// Calculate average resolution time (in days) - only for completed complaints
 	var completedComplaints []models.Complaint
-	query.Where("status = ?", models.StatusCompleted).Find(&completedComplaints)
+	completedQuery := DB.Model(&models.Complaint{}).Where("status = ?", models.StatusCompleted)
+	if startDate != "" && endDate != "" {
+		completedQuery = completedQuery.Where("created_at BETWEEN ? AND ?", startDate, endDate)
+	}
+	completedQuery.Find(&completedComplaints)
 	
 	var totalHours float64
 	var count float64
@@ -643,35 +654,55 @@ func getComplaintTrends(c *gin.Context) {
 		startDate = time.Now().AddDate(0, 0, -30).Format("2006-01-02")
 	}
 	
+	// Ensure endDate includes the full day (23:59:59)
+	endDateWithTime := endDate + " 23:59:59"
+	
 	// Get daily submission counts
 	var submissionData []struct {
-		Date  string
-		Count int64
+		Date  string `gorm:"column:date"`
+		Count int64  `gorm:"column:count"`
 	}
 	
 	DB.Model(&models.Complaint{}).
 		Select("DATE(created_at) as date, COUNT(*) as count").
-		Where("created_at BETWEEN ? AND ?", startDate, endDate).
+		Where("created_at BETWEEN ? AND ?", startDate, endDateWithTime).
 		Group("DATE(created_at)").
 		Order("date ASC").
 		Scan(&submissionData)
 	
 	// Get daily resolved counts
 	var resolvedData []struct {
-		Date  string
-		Count int64
+		Date  string `gorm:"column:date"`
+		Count int64  `gorm:"column:count"`
 	}
 	
 	DB.Model(&models.Complaint{}).
 		Select("DATE(updated_at) as date, COUNT(*) as count").
-		Where("status = ? AND updated_at BETWEEN ? AND ?", models.StatusCompleted, startDate, endDate).
+		Where("status = ? AND updated_at BETWEEN ? AND ?", models.StatusCompleted, startDate, endDateWithTime).
 		Group("DATE(updated_at)").
 		Order("date ASC").
 		Scan(&resolvedData)
 	
+	// Format response with proper date format
+	formattedSubmissions := make([]gin.H, len(submissionData))
+	for i, item := range submissionData {
+		formattedSubmissions[i] = gin.H{
+			"date":  item.Date,
+			"count": item.Count,
+		}
+	}
+	
+	formattedResolved := make([]gin.H, len(resolvedData))
+	for i, item := range resolvedData {
+		formattedResolved[i] = gin.H{
+			"date":  item.Date,
+			"count": item.Count,
+		}
+	}
+	
 	c.JSON(200, gin.H{
-		"submissions": submissionData,
-		"resolved":    resolvedData,
+		"submissions": formattedSubmissions,
+		"resolved":    formattedResolved,
 		"start_date":  startDate,
 		"end_date":    endDate,
 	})

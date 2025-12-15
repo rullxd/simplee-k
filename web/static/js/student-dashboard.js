@@ -283,15 +283,44 @@ function setupEventListeners() {
     }
 
     // Filter buttons
-    const filterButtons = document.querySelectorAll('button:has(span.size-2.rounded-full)');
+    const filterButtons = document.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
         btn.addEventListener('click', async () => {
-            const status = btn.textContent.trim().toLowerCase().replace(' ', '_');
-            const response = await ComplaintAPI.getAll({ status, page: 1, limit: 10 });
-            if (response && response.data) {
-                displayComplaints(response.data);
+            const status = btn.getAttribute('data-status');
+            
+            // Update active state immediately (no delay)
+            updateFilterActiveState(btn);
+            
+            // Load filtered complaints (async, but UI already updated)
+            const params = { page: 1, limit: 10 };
+            if (status) {
+                params.status = status;
+            }
+            
+            // Load data in background
+            try {
+                const response = await ComplaintAPI.getAll(params);
+                if (response && response.data) {
+                    displayComplaints(response.data);
+                }
+            } catch (error) {
+                console.error('Error loading filtered complaints:', error);
             }
         });
+    });
+}
+
+function updateFilterActiveState(activeBtn) {
+    // Update all filter buttons immediately (synchronous, no delay)
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        if (btn === activeBtn) {
+            // Active state: blue background
+            btn.className = 'filter-btn active flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-colors';
+        } else {
+            // Inactive state: white/gray background
+            btn.className = 'filter-btn flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-full text-sm font-medium whitespace-nowrap transition-colors';
+        }
     });
 }
 

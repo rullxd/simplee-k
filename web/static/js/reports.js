@@ -212,7 +212,10 @@ function renderTrendsChart(trendsData) {
     
     // Format dates for display (e.g., "Oct 1")
     const formattedDates = dates.map(date => {
-        const d = new Date(date);
+        // Handle date format from database (YYYY-MM-DD)
+        const dateStr = date.split('T')[0]; // Remove time if present
+        const [year, month, day] = dateStr.split('-');
+        const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         return `${months[d.getMonth()]} ${d.getDate()}`;
     });
