@@ -74,7 +74,7 @@ async function loadComplaintDetails(id) {
         }
         
         console.log('Complaint loaded:', complaint);
-        displayComplaintDetails(complaint);
+            displayComplaintDetails(complaint);
     } catch (error) {
         console.error('Error loading complaint:', error);
         showError('Failed to load complaint details: ' + (error.message || 'Unknown error'));
@@ -155,13 +155,13 @@ function displayComplaintDetails(complaint) {
         const userInfoDiv = userSection.querySelector('div.flex.flex-col');
         if (userInfoDiv) {
             const userNameEl = userInfoDiv.querySelector('span.text-base.font-bold');
-            if (userNameEl) {
-                userNameEl.textContent = complaint.user?.name || 'Unknown';
-            }
-            
+    if (userNameEl) {
+        userNameEl.textContent = complaint.user?.name || 'Unknown';
+    }
+
             const userInfoEl = userInfoDiv.querySelector('span.text-sm.text-slate-500') ||
                               userInfoDiv.querySelector('span.text-sm.text-slate-400');
-            if (userInfoEl) {
+    if (userInfoEl) {
                 userInfoEl.textContent = `NIM: ${complaint.user?.student_id || 'N/A'} • ${complaint.user?.email || 'N/A'}`;
             }
         }

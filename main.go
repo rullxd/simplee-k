@@ -54,17 +54,18 @@ func setupRoutes() *gin.Engine {
 	r.Static("/uploads", "./uploads")
 
 	// Serve HTML files
-	r.GET("/", func(c *gin.Context) { c.File("./web/login/code.html") })
-	r.GET("/login", func(c *gin.Context) { c.File("./web/login/code.html") })
-	r.GET("/student/dashboard", func(c *gin.Context) { c.File("./web/student/code.html") })
-	r.GET("/admin/dashboard", func(c *gin.Context) { c.File("./web/admin/code.html") })
-	r.GET("/admin/users", func(c *gin.Context) { c.File("./web/users/code.html") })
-	r.GET("/admin/reports", func(c *gin.Context) { c.File("./web/reports/code.html") })
-	r.GET("/admin/settings", func(c *gin.Context) { c.File("./web/settings/code.html") })
-	r.GET("/admin/complaints", func(c *gin.Context) { c.File("./web/complaints/code.html") })
-	r.GET("/complaint/submit", func(c *gin.Context) { c.File("./web/submit/code.html") })
-	r.GET("/admin/complaint/:id", func(c *gin.Context) { c.File("./web/complaint-detail/code.html") })
-	r.GET("/student/complaint/:id", func(c *gin.Context) { c.File("./web/student-complaint-detail/code.html") })
+	r.GET("/", func(c *gin.Context) { c.File("./web/login.html") })
+	r.GET("/login", func(c *gin.Context) { c.File("./web/login.html") })
+	r.GET("/student/dashboard", func(c *gin.Context) { c.File("./web/student-dashboard.html") })
+	r.GET("/admin/dashboard", func(c *gin.Context) { c.File("./web/admin-dashboard.html") })
+	r.GET("/admin/users", func(c *gin.Context) { c.File("./web/users.html") })
+	r.GET("/admin/reports", func(c *gin.Context) { c.File("./web/reports.html") })
+	r.GET("/admin/settings", func(c *gin.Context) { c.File("./web/settings.html") })
+	r.GET("/admin/complaints", func(c *gin.Context) { c.File("./web/complaints.html") })
+	r.GET("/admin/announcements", func(c *gin.Context) { c.File("./web/announcements.html") })
+	r.GET("/complaint/submit", func(c *gin.Context) { c.File("./web/submit-complaint.html") })
+	r.GET("/admin/complaint/:id", func(c *gin.Context) { c.File("./web/complaint-detail.html") })
+	r.GET("/student/complaint/:id", func(c *gin.Context) { c.File("./web/student-complaint-detail.html") })
 	
 	// Legacy route redirect for backward compatibility
 	// Redirect old /complaint/:id to /student/complaint/:id (default to student)
@@ -92,6 +93,11 @@ func setupRoutes() *gin.Engine {
 			protected.PUT("/complaints/:id", updateComplaint)
 			protected.DELETE("/complaints/:id", deleteComplaint)
 
+			// Notifications
+			protected.GET("/notifications", getNotifications)
+			protected.PUT("/notifications/:id/read", markNotificationAsRead)
+			protected.PUT("/notifications/read-all", markAllNotificationsAsRead)
+
 			// Users (Admin only)
 			protected.GET("/users", getAllUsers)
 			protected.GET("/users/stats", getUserStats)
@@ -108,6 +114,13 @@ func setupRoutes() *gin.Engine {
 			admin.GET("/reports/stats", getReportStats)
 			admin.GET("/reports/categories", getCategoryStats)
 			admin.GET("/reports/trends", getComplaintTrends)
+			
+			// Announcements
+			admin.GET("/announcements", getAnnouncements)
+			admin.POST("/announcements", createAnnouncement)
+			admin.GET("/announcements/:id", getAnnouncement)
+			admin.PUT("/announcements/:id", updateAnnouncement)
+			admin.DELETE("/announcements/:id", deleteAnnouncement)
 		}
 	}
 

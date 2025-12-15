@@ -143,6 +143,64 @@ const ReportAPI = {
     },
 };
 
+// Announcement API
+const AnnouncementAPI = {
+    getAll: async (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.page) queryParams.append('page', params.page);
+        if (params.limit) queryParams.append('limit', params.limit);
+        if (params.status) queryParams.append('status', params.status);
+        if (params.search) queryParams.append('search', params.search);
+        
+        const query = queryParams.toString();
+        return await apiRequest(`/announcements${query ? '?' + query : ''}`);
+    },
+    
+    getById: async (id) => {
+        return await apiRequest(`/announcements/${id}`);
+    },
+    
+    create: async (data) => {
+        return await apiRequest('/announcements', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+    
+    update: async (id, data) => {
+        return await apiRequest(`/announcements/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+    
+    delete: async (id) => {
+        return await apiRequest(`/announcements/${id}`, {
+            method: 'DELETE',
+        });
+    },
+};
+
+// Notification API
+const NotificationAPI = {
+    getAll: async (params = {}) => {
+        const queryParams = new URLSearchParams();
+        if (params.limit) queryParams.append('limit', params.limit);
+        const query = queryParams.toString();
+        return await apiRequest(`/notifications${query ? '?' + query : ''}`);
+    },
+    markAsRead: async (id) => {
+        return await apiRequest(`/notifications/${id}/read`, {
+            method: 'PUT',
+        });
+    },
+    markAllAsRead: async () => {
+        return await apiRequest('/notifications/read-all', {
+            method: 'PUT',
+        });
+    },
+};
+
 // Utility functions
 function formatDate(dateString) {
     const date = new Date(dateString);

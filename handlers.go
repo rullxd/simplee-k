@@ -236,11 +236,25 @@ func updateComplaint(c *gin.Context) {
 		return
 	}
 
+	oldStatus := complaint.Status
+	oldAdminResponse := complaint.AdminResponse
+	statusChanged := false
+	responseAdded := false
+	responseChanged := false
+
 	if req.Status != "" {
 		complaint.Status = models.ComplaintStatus(req.Status)
+		if complaint.Status != oldStatus {
+			statusChanged = true
+		}
 	}
 	if req.AdminResponse != "" {
 		complaint.AdminResponse = req.AdminResponse
+		if oldAdminResponse == "" {
+			responseAdded = true
+		} else if oldAdminResponse != req.AdminResponse {
+			responseChanged = true
+		}
 	}
 
 	if err := DB.Save(&complaint).Error; err != nil {
@@ -249,7 +263,68 @@ func updateComplaint(c *gin.Context) {
 	}
 
 	DB.Preload("User").Preload("Category").First(&complaint, complaint.ID)
+	
+	// Create notification for the complaint owner if status changed or response added/changed
+	if statusChanged || responseAdded || responseChanged {
+		createComplaintUpdateNotification(complaint.ID, complaint.UserID, complaint.Title, complaint.Status, complaint.AdminResponse, statusChanged, responseAdded || responseChanged)
+	}
+	
 	c.JSON(200, complaint)
+}
+
+// Helper function to create notification when complaint status is updated or admin responds
+func createComplaintUpdateNotification(complaintID, userID uint, complaintTitle string, status models.ComplaintStatus, adminResponse string, statusChanged, responseAdded bool) {
+	var title string
+	var message string
+	
+	if statusChanged && responseAdded {
+		// Both status changed and response added
+		title = "Ticket Status Update"
+		statusText := getStatusTextForNotification(status)
+		message = fmt.Sprintf("Your complaint \"%s\" status has been updated to %s and admin has responded.", complaintTitle, statusText)
+	} else if statusChanged {
+		// Only status changed
+		title = "Ticket Status Update"
+		statusText := getStatusTextForNotification(status)
+		message = fmt.Sprintf("Your complaint \"%s\" status has been updated to %s.", complaintTitle, statusText)
+	} else if responseAdded {
+		// Only response added
+		title = "Admin Response"
+		// Truncate response for notification (max 150 chars)
+		responsePreview := adminResponse
+		if len(responsePreview) > 150 {
+			responsePreview = responsePreview[:150] + "..."
+		}
+		message = fmt.Sprintf("Admin has responded to your complaint \"%s\": %s", complaintTitle, responsePreview)
+	} else {
+		// No change that requires notification
+		return
+	}
+	
+	complaintIDPtr := &complaintID
+	notification := models.Notification{
+		UserID:    userID,
+		Title:     title,
+		Message:   message,
+		Type:      models.NotificationComplaintUpdate,
+		RelatedID: complaintIDPtr,
+		IsRead:    false,
+	}
+	DB.Create(&notification)
+}
+
+// Helper function to get status text for notification
+func getStatusTextForNotification(status models.ComplaintStatus) string {
+	statusMap := map[models.ComplaintStatus]string{
+		models.StatusPending:   "Pending Review",
+		models.StatusInProcess: "In Process",
+		models.StatusCompleted: "Completed",
+		models.StatusRejected:  "Rejected",
+	}
+	if text, ok := statusMap[status]; ok {
+		return text
+	}
+	return string(status)
 }
 
 func deleteComplaint(c *gin.Context) {
@@ -600,5 +675,233 @@ func getComplaintTrends(c *gin.Context) {
 		"start_date":  startDate,
 		"end_date":    endDate,
 	})
+}
+
+// Announcement handlers
+type CreateAnnouncementRequest struct {
+	Title   string `json:"title" binding:"required"`
+	Content string `json:"content" binding:"required"`
+	Status  string `json:"status"`
+}
+
+type UpdateAnnouncementRequest struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+	Status  string `json:"status"`
+}
+
+func createAnnouncement(c *gin.Context) {
+	userID := getUserID(c)
+	var req CreateAnnouncementRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	status := models.AnnouncementDraft
+	if req.Status != "" {
+		status = models.AnnouncementStatus(req.Status)
+	}
+
+	announcement := models.Announcement{
+		Title:    req.Title,
+		Content:  req.Content,
+		AuthorID: userID,
+		Status:   status,
+	}
+
+	if err := DB.Create(&announcement).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Failed to create announcement"})
+		return
+	}
+
+	DB.Preload("Author").First(&announcement, announcement.ID)
+	
+	// Create notifications for all students if status is published
+	if status == models.AnnouncementPublished {
+		createAnnouncementNotifications(announcement.ID, announcement.Title, announcement.Content)
+	}
+	
+	c.JSON(201, announcement)
+}
+
+func getAnnouncements(c *gin.Context) {
+	var announcements []models.Announcement
+	query := DB.Preload("Author").Where("deleted_at IS NULL")
+
+	// Filter by status
+	status := c.Query("status")
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+
+	// Search
+	search := c.Query("search")
+	if search != "" {
+		query = query.Where("title LIKE ? OR content LIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	// Pagination
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	offset := (page - 1) * limit
+
+	var total int64
+	query.Model(&models.Announcement{}).Count(&total)
+
+	query.Order("created_at DESC").Limit(limit).Offset(offset).Find(&announcements)
+
+	c.JSON(200, gin.H{
+		"data":       announcements,
+		"page":       page,
+		"limit":      limit,
+		"total":      total,
+		"total_pages": (int(total) + limit - 1) / limit,
+	})
+}
+
+func getAnnouncement(c *gin.Context) {
+	id := c.Param("id")
+	var announcement models.Announcement
+	if err := DB.Preload("Author").First(&announcement, id).Error; err != nil {
+		c.JSON(404, gin.H{"error": "Announcement not found"})
+		return
+	}
+	c.JSON(200, announcement)
+}
+
+func updateAnnouncement(c *gin.Context) {
+	id := c.Param("id")
+	var announcement models.Announcement
+	if err := DB.First(&announcement, id).Error; err != nil {
+		c.JSON(404, gin.H{"error": "Announcement not found"})
+		return
+	}
+
+	var req UpdateAnnouncementRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	oldStatus := announcement.Status
+	wasPublished := oldStatus == models.AnnouncementPublished
+
+	if req.Title != "" {
+		announcement.Title = req.Title
+	}
+	if req.Content != "" {
+		announcement.Content = req.Content
+	}
+	if req.Status != "" {
+		announcement.Status = models.AnnouncementStatus(req.Status)
+	}
+
+	if err := DB.Save(&announcement).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Failed to update announcement"})
+		return
+	}
+
+	DB.Preload("Author").First(&announcement, announcement.ID)
+	
+	// Create notifications for all students if status changed to published
+	if announcement.Status == models.AnnouncementPublished && !wasPublished {
+		createAnnouncementNotifications(announcement.ID, announcement.Title, announcement.Content)
+	}
+	
+	c.JSON(200, announcement)
+}
+
+func deleteAnnouncement(c *gin.Context) {
+	id := c.Param("id")
+	if err := DB.Delete(&models.Announcement{}, id).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Failed to delete announcement"})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Announcement deleted successfully"})
+}
+
+// Helper function to create notifications for all students when announcement is published
+func createAnnouncementNotifications(announcementID uint, title, content string) {
+	// Get all students
+	var students []models.User
+	DB.Where("role = ?", "student").Find(&students)
+	
+	// Truncate content for notification message (max 200 chars)
+	message := content
+	if len(message) > 200 {
+		message = message[:200] + "..."
+	}
+	
+	// Create notification for each student
+	announcementIDPtr := &announcementID
+	for _, student := range students {
+		notification := models.Notification{
+			UserID:    student.ID,
+			Title:     "System Announcement",
+			Message:   title + ": " + message,
+			Type:      models.NotificationAnnouncement,
+			RelatedID: announcementIDPtr,
+			IsRead:    false,
+		}
+		DB.Create(&notification)
+	}
+}
+
+// Notification Handlers
+func getNotifications(c *gin.Context) {
+	userID := getUserID(c)
+	var notifications []models.Notification
+	
+	query := DB.Where("user_id = ?", userID).Order("created_at DESC")
+	
+	// Get unread count
+	var unreadCount int64
+	DB.Model(&models.Notification{}).Where("user_id = ? AND is_read = ?", userID, false).Count(&unreadCount)
+	
+	// Get limit from query (default 20)
+	limit := 20
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if parsedLimit, err := strconv.Atoi(limitStr); err == nil && parsedLimit > 0 {
+			limit = parsedLimit
+		}
+	}
+	
+	query.Limit(limit).Find(&notifications)
+	
+	c.JSON(200, gin.H{
+		"data":        notifications,
+		"unread_count": unreadCount,
+	})
+}
+
+func markNotificationAsRead(c *gin.Context) {
+	userID := getUserID(c)
+	id := c.Param("id")
+	
+	var notification models.Notification
+	if err := DB.Where("id = ? AND user_id = ?", id, userID).First(&notification).Error; err != nil {
+		c.JSON(404, gin.H{"error": "Notification not found"})
+		return
+	}
+	
+	notification.IsRead = true
+	if err := DB.Save(&notification).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Failed to update notification"})
+		return
+	}
+	
+	c.JSON(200, notification)
+}
+
+func markAllNotificationsAsRead(c *gin.Context) {
+	userID := getUserID(c)
+	
+	if err := DB.Model(&models.Notification{}).Where("user_id = ? AND is_read = ?", userID, false).Update("is_read", true).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Failed to update notifications"})
+		return
+	}
+	
+	c.JSON(200, gin.H{"message": "All notifications marked as read"})
 }
 
