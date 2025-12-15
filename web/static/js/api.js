@@ -10,7 +10,7 @@ const API_BASE_URL = (() => {
         return window.API_BASE_URL;
     }
     // Ngrok URL - Update this if ngrok URL changes
-    // Current ngrok URL: https://e04de0acf391.ngrok-free.app
+    // Current ngrok URL: return 'http://localhost:8080/api';
     return 'https://e04de0acf391.ngrok-free.app/api';
 })();
 
