@@ -165,7 +165,46 @@ func createComplaint(c *gin.Context) {
 	}
 
 	DB.Preload("User").Preload("Category").First(&complaint, complaint.ID)
+	
+	// Create notifications for all admins when new complaint is created
+	createNewComplaintNotifications(complaint.ID, complaint.TicketID, complaint.Title, complaint.UserID)
+	
 	c.JSON(201, complaint)
+}
+
+// Helper function to create notifications for all admins when new complaint is created
+func createNewComplaintNotifications(complaintID uint, ticketID, complaintTitle string, studentUserID uint) {
+	// Get all admins
+	var admins []models.User
+	DB.Where("role = ?", "admin").Find(&admins)
+	
+	// Get student info for notification message
+	var student models.User
+	DB.First(&student, studentUserID)
+	studentName := student.Name
+	if studentName == "" {
+		studentName = student.Username
+	}
+	
+	// Truncate title for notification message (max 100 chars)
+	titlePreview := complaintTitle
+	if len(titlePreview) > 100 {
+		titlePreview = titlePreview[:100] + "..."
+	}
+	
+	// Create notification for each admin
+	complaintIDPtr := &complaintID
+	for _, admin := range admins {
+		notification := models.Notification{
+			UserID:    admin.ID,
+			Title:     "New Complaint Received",
+			Message:   fmt.Sprintf("New complaint \"%s\" submitted by %s (Ticket: %s)", titlePreview, studentName, ticketID),
+			Type:      models.NotificationSystem,
+			RelatedID: complaintIDPtr,
+			IsRead:    false,
+		}
+		DB.Create(&notification)
+	}
 }
 
 func getComplaints(c *gin.Context) {

@@ -37,7 +37,7 @@ async function apiRequest(endpoint, options = {}) {
     }
 
     const data = await response.json();
-
+    
     if (!response.ok) {
         throw new Error(data.error || 'Request failed');
     }
@@ -52,12 +52,12 @@ const AuthAPI = {
             method: 'POST',
             body: JSON.stringify({ username, password }),
         });
-
+        
         if (response) {
             TokenManager.setToken(response.token);
             TokenManager.setUser(response.user);
         }
-
+        
         return response;
     },
     logout: () => {
@@ -204,10 +204,10 @@ const NotificationAPI = {
 // Utility functions
 function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+    return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
     });
 }
 
@@ -230,4 +230,40 @@ function getStatusText(status) {
     };
     return statusMap[status] || status;
 }
+
+// Theme Management
+const ThemeManager = {
+    getTheme: () => {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            return savedTheme;
+        }
+        // Default to light mode
+        return 'light';
+    },
+    
+    setTheme: (theme) => {
+        localStorage.setItem('theme', theme);
+        const html = document.documentElement;
+        if (theme === 'dark') {
+            html.classList.remove('light');
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+            html.classList.add('light');
+        }
+    },
+    
+    toggle: () => {
+        const currentTheme = ThemeManager.getTheme();
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        ThemeManager.setTheme(newTheme);
+        return newTheme;
+    },
+    
+    init: () => {
+        const theme = ThemeManager.getTheme();
+        ThemeManager.setTheme(theme);
+    }
+};
 

@@ -200,7 +200,7 @@ function getNotificationIcon(type) {
     const icons = {
         'complaint_update': 'inbox',
         'announcement': 'campaign',
-        'system': 'info',
+        'system': 'inbox', // New complaint notifications use inbox icon
         'other': 'notifications',
     };
     return icons[type] || 'notifications';
@@ -210,7 +210,7 @@ function getNotificationIconColor(type) {
     const colors = {
         'complaint_update': 'bg-blue-500',
         'announcement': 'bg-purple-500',
-        'system': 'bg-amber-500',
+        'system': 'bg-green-500', // New complaint notifications use green color
         'other': 'bg-slate-500',
     };
     return colors[type] || 'bg-slate-500';
@@ -237,6 +237,16 @@ function updateNotificationBadge(count) {
     if (badge) {
         if (count > 0) {
             badge.classList.remove('hidden');
+            // Optionally show count if > 9
+            if (count > 9) {
+                badge.textContent = '9+';
+                badge.classList.add('flex', 'items-center', 'justify-center', 'text-xs', 'text-white', 'font-bold', 'px-1', 'min-w-[18px]', 'h-[18px]');
+                badge.classList.remove('size-2.5');
+            } else {
+                badge.textContent = '';
+                badge.classList.add('size-2.5');
+                badge.classList.remove('flex', 'items-center', 'justify-center', 'text-xs', 'text-white', 'font-bold', 'px-1', 'min-w-[18px]', 'h-[18px]');
+            }
         } else {
             badge.classList.add('hidden');
         }
@@ -253,7 +263,8 @@ async function handleNotificationClick(notificationId, relatedId, type) {
     }
 
     // Navigate based on type
-    if (type === 'complaint_update' && relatedId) {
+    if ((type === 'complaint_update' || type === 'system') && relatedId) {
+        // Navigate to complaint detail page for both complaint_update and system (new complaint) notifications
         window.location.href = `/admin/complaint/${relatedId}`;
     } else if (type === 'announcement' && relatedId) {
         // Show announcement details

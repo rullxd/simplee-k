@@ -300,8 +300,8 @@ function setupEventListeners() {
             // Load data in background
             try {
                 const response = await ComplaintAPI.getAll(params);
-                if (response && response.data) {
-                    displayComplaints(response.data);
+            if (response && response.data) {
+                displayComplaints(response.data);
                 }
             } catch (error) {
                 console.error('Error loading filtered complaints:', error);
