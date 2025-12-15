@@ -1,18 +1,5 @@
 // API Configuration
-// For Vercel: Set window.API_BASE_URL via script tag in HTML or use environment variable
-// For local development: Uses localhost as fallback
-// 
-// To set API URL dynamically, add this before loading api.js:
-// <script>window.API_BASE_URL = 'https://your-backend-url.com/api';</script>
-const API_BASE_URL = (() => {
-    // Check if set via window (for runtime config - recommended)
-    if (typeof window !== 'undefined' && window.API_BASE_URL) {
-        return window.API_BASE_URL;
-    }
-    // Ngrok URL - Update this if ngrok URL changes
-    // Current ngrok URL: return 'http://localhost:8080/api';
-    return 'https://e04de0acf391.ngrok-free.app/api';
-})();
+const API_BASE_URL = 'http://localhost:8080/api';
 
 // Token management
 const TokenManager = {
