@@ -152,8 +152,21 @@ function displayComplaints(complaints) {
 }
 
 function updateUserInfo(user) {
-    const nameEl = document.querySelector('p.text-sm.font-semibold');
-    if (nameEl) nameEl.textContent = user.name || user.username;
+    // Update user name in navbar
+    const nameEl = document.querySelector('header .text-right p.text-sm.font-semibold');
+    const roleEl = document.querySelector('header .text-right p.text-xs');
+    
+    if (nameEl) {
+        nameEl.textContent = user.name || user.username || 'Admin User';
+    }
+    if (roleEl) {
+        // Display student_id if available, otherwise show role
+        if (user.student_id) {
+            roleEl.textContent = user.student_id;
+        } else {
+            roleEl.textContent = user.role === 'admin' ? 'Super Admin' : 'Administrator';
+        }
+    }
 }
 
 async function loadNotifications() {

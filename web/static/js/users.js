@@ -252,7 +252,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             nameEl.textContent = user.name || user.username || 'Admin User';
         }
         if (roleEl) {
-            roleEl.textContent = user.role === 'admin' ? 'Super Admin' : 'Administrator';
+            // Display student_id if available, otherwise show role
+            if (user.student_id) {
+                roleEl.textContent = user.student_id;
+            } else {
+                roleEl.textContent = user.role === 'admin' ? 'Super Admin' : 'Administrator';
+            }
         }
     }
 
