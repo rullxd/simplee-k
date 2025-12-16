@@ -118,14 +118,15 @@ simplee-k/
 
 ## Default Credentials
 
-Setelah pertama kali menjalankan aplikasi, database akan di-seed dengan data default:
+Setelah pertama kali menjalankan aplikasi, database akan di-seed dengan satu admin dan satu student contoh:
 
 **Admin:**
 - Username: `admin`
 - Password: `admin123`
 
-**Student:**
-- Buat user student baru melalui database atau API
+**Student (contoh):**
+- Username: `student001`
+- Password: `student123`
 
 ## API Endpoints
 

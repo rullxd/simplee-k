@@ -75,7 +75,7 @@ func seedDB() {
 	// Seed admin user (always ensure admin exists with correct password)
 	var adminUser models.User
 	result := DB.Where("username = ?", "admin").First(&adminUser)
-	
+
 	if result.Error == gorm.ErrRecordNotFound {
 		// Create new admin user
 		hashedPassword, err := hashPassword("admin123")
@@ -83,7 +83,7 @@ func seedDB() {
 			log.Printf("Error hashing password: %v", err)
 			return
 		}
-		
+
 		admin := models.User{
 			Username:  "admin",
 			Email:     "admin@simplee-k.com",
@@ -92,7 +92,7 @@ func seedDB() {
 			Role:      models.RoleAdmin,
 			StudentID: "ADMIN001",
 		}
-		
+
 		if err := DB.Create(&admin).Error; err != nil {
 			log.Printf("Error creating admin user: %v", err)
 		} else {
@@ -108,48 +108,28 @@ func seedDB() {
 		}
 	}
 
-	// Seed sample student users
+	// Seed a single sample student user (if none exist)
 	var studentCount int64
 	DB.Model(&models.User{}).Where("role = ?", "student").Count(&studentCount)
 	if studentCount == 0 {
 		hashedPassword, _ := hashPassword("student123")
-		students := []models.User{
-			{
-				Username:  "student001",
-				StudentID: "2024001",
-				Email:     "student001@university.edu",
-				Password:  hashedPassword,
-				Name:      "Alex Johnson",
-				Role:      models.RoleStudent,
-				Phone:     "+6281234567890",
-			},
-			{
-				Username:  "student002",
-				StudentID: "2024002",
-				Email:     "student002@university.edu",
-				Password:  hashedPassword,
-				Name:      "Sarah Lee",
-				Role:      models.RoleStudent,
-				Phone:     "+6281234567891",
-			},
-			{
-				Username:  "student003",
-				StudentID: "2024003",
-				Email:     "student003@university.edu",
-				Password:  hashedPassword,
-				Name:      "Michael Brown",
-				Role:      models.RoleStudent,
-				Phone:     "+6281234567892",
-			},
+		student := models.User{
+			Username:  "student001",
+			StudentID: "2024001",
+			Email:     "student001@university.edu",
+			Password:  hashedPassword,
+			Name:      "Student User",
+			Role:      models.RoleStudent,
+			Phone:     "+6281234567890",
 		}
 
-		for _, student := range students {
-			DB.Create(&student)
+		if err := DB.Create(&student).Error; err != nil {
+			log.Printf("Error creating sample student user: %v", err)
+		} else {
+			log.Println("Sample student user created (username=student001, password=student123)")
 		}
-		log.Println("Sample student users created")
-		log.Println("Student login: username=student001, password=student123")
 	}
-	
+
 	log.Println("Database seeding completed")
 }
 
@@ -254,4 +234,3 @@ func getUserRole(c *gin.Context) string {
 	role, _ := c.Get("user_role")
 	return role.(string)
 }
-
