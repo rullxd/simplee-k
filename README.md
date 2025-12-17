@@ -249,7 +249,7 @@ Untuk production, pastikan:
 
 ## License
 
-© 2023 SIMPEL-K System. All rights reserved.
+© 2025 SIMPEL-K System. All rights reserved.
 
 ## Support
 
